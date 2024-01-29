@@ -6,7 +6,6 @@ import com.inner.consulting.entities.Empleador;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.TesseractException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +14,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @Service
 public class EmpleadorService {
@@ -59,7 +61,7 @@ public class EmpleadorService {
             String ocrResult = procesarPDF(pdfFile.getInputStream());
 
             // Loguear el resultado del OCR (puedes ajustarlo según tus necesidades)
-            System.out.println("Texto extraído del PDF: " + ocrResult);
+            Logger.getLogger(EmpleadorService.class.getName()).info("Texto extraído del PDF: " + ocrResult);
 
             // Create a new user object
             Empleador empleador = new Empleador(empleadorId, nombre, apellido, pdfUrl);
@@ -75,7 +77,7 @@ public class EmpleadorService {
         }
     }
 
-    private String procesarPDF(InputStream pdfStream) throws TesseractException {
+    private String procesarPDF(InputStream pdfStream) throws Exception {
         try {
             // Crear un archivo temporal
             Path tempPdfPath = Files.createTempFile("temp-pdf", ".pdf");
@@ -89,13 +91,17 @@ public class EmpleadorService {
             // Realizar OCR con Tesseract
             String ocrResult = tesseract.doOCR(pdfFile);
 
+            // Convertir la cadena a la codificación del sistema
+            byte[] bytes = ocrResult.getBytes(StandardCharsets.UTF_8);
+            ocrResult = new String(bytes, Charset.defaultCharset());
+
             // Eliminar el archivo temporal
             Files.delete(tempPdfPath);
 
             return ocrResult;
         } catch (Exception e) {
             System.err.println("Error al procesar el PDF con Tesseract: " + e.getMessage());
-            throw new TesseractException(e.getMessage());
+            throw e;
         }
     }
 }
