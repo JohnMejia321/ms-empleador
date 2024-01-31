@@ -10,9 +10,12 @@ public class TesseractConfig {
     @Bean
     public Tesseract getTesseract() {
         Tesseract instance = new Tesseract();
-        // Establece la ruta al directorio tessdata
-        instance.setDatapath(
-                "C:/Users/John-Mejia/Documents/programacion/inner-consulting/microservicios/inscripcion-empleador/tessdata");
+        // Obtiene la ruta absoluta de la carpeta raíz del proyecto
+        String rootPath = System.getProperty("user.dir");
+        // Obtiene la ruta absoluta del directorio tessdata en el proyecto
+        String tessdataPath = TesseractConfig.class.getResource("/tessdata").getPath();
+        // Establece la ruta relativa al directorio tessdata
+        instance.setDatapath(rootPath + "/tessdata");
         instance.setLanguage("spa");
         return instance;
     }
